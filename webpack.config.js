@@ -12,4 +12,13 @@ module.exports = {
             process.env.SENTRY_PROJECT,
         ),
     ],
+    module: {
+        rules: [
+            {
+                test: /\.ya?ml$/,
+                type: 'json',
+                use: 'yaml-loader',
+            },
+        ],
+    },
 };

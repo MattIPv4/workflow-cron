@@ -1,0 +1,7 @@
+workflows:
+  - name: PogChamp Check
+    owner: MattIPv4
+    repo: pogchamp
+    workflow: update.yml
+    cron:
+      - '*/15 * * * *'
