@@ -3,5 +3,14 @@ workflows:
     owner: MattIPv4
     repo: pogchamp
     workflow: update.yml
+    ref: master
     cron:
-      - '*/15 * * * *'
+      - '* * * * *'
+
+  - name: Testing
+    owner: MattIPv4
+    repo: testing
+    workflow: bad.yml
+    ref: master
+    cron:
+      - '* * * * *'

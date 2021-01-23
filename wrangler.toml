@@ -3,3 +3,6 @@ type = "webpack"
 account_id = "fb1f542488f2441acf88ca15f3a8390d"
 workers_dev = true
 webpack_config = "webpack.config.js"
+kv_namespaces = [
+    { binding = "WORKFLOW_CRON_LAST_RUNS", id = "fdd2aa5ee814496486e479e7dbd61929", preview_id = "4fc9f04e2f29425c878cf74200359002" }
+]

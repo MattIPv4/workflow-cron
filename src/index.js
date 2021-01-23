@@ -1,5 +1,6 @@
 const WorkersSentry = require('workers-sentry/worker');
 const parser = require('cron-parser');
+const { Octokit } = require('@octokit/core');
 const data = require('./data.yml');
 
 // Util to send a text response
@@ -19,6 +20,51 @@ const jsonResponse = obj => new Response(JSON.stringify(obj), {
     },
 });
 
+// Convert a workflow cron to a KV key
+const workflowCronKey = data => `${data.owner}/${data.repo}/${data.ref}/${data.workflow}/${data.cron}`;
+
+// Run each workflow that is due to run
+const executeWorkflows = async sentry => {
+    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+    // Iterate over each workflow and each cron within
+    for (const workflow of data.workflows) {
+        for (const cron of workflow.cron) {
+            // Try to get a last run timestamp
+            const last = await WORKFLOW_CRON_LAST_RUNS.get(workflowCronKey({ ...workflow, cron }));
+
+            // Determine if the cron should trigger within a 1 minute bubble of now
+            const now = new Date();
+            const options = {
+                currentDate: last === null ? new Date(now.getTime() - 30 * 1000) : new Date(Number(last)),
+                endDate: new Date(now.getTime() + 30 * 1000),
+                iterator: false,
+            };
+            const interval = parser.parseExpression(cron, options);
+
+            // If it should trigger, let's trigger it
+            if (interval.hasNext()) {
+                await octokit.request(
+                    'POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
+                    {
+                        owner: workflow.owner,
+                        repo: workflow.repo,
+                        workflow_id: workflow.workflow,
+                        ref: workflow.ref,
+                    },
+                )
+                    // If successful, store the timestamp now
+                    .then(() => WORKFLOW_CRON_LAST_RUNS.put(
+                        workflowCronKey({ ...workflow, cron }),
+                        Math.max(Date.now(), interval.next().getTime()),
+                    ))
+                    // If errored, don't store but log error
+                    .catch(err => sentry.captureException(err));
+            }
+        }
+    }
+}
+
 // Process all requests to the worker
 const handleRequest = async ({ request, wait, sentry }) => {
     const url = new URL(request.url);
@@ -31,38 +77,11 @@ const handleRequest = async ({ request, wait, sentry }) => {
 
     // Execute triggers route
     if (url.pathname === '/execute') {
-        // Iterate over each workflow and each cron within
-        const toTrigger = [];
-        for (const workflow of data.workflows) {
-            for (const cron of workflow.cron) {
-                // Determine if the cron should trigger within a 1 minute bubble of now
-                const now = new Date();
-                const options = {
-                    currentDate: new Date(now.getTime() - 30 * 1000),
-                    endDate: new Date(now.getTime() + 30 * 1000),
-                    iterator: false,
-                };
-                const interval = parser.parseExpression(cron, options);
-
-                // If it should trigger, do something
-                if (interval.hasNext()) {
-                    toTrigger.push({
-                        owner: workflow.owner,
-                        repo: workflow.repo,
-                        workflow: workflow.workflow,
-                        cron,
-                    });
-                }
-            }
-        }
-
         // Trigger each workflow in the background after
-        wait((async () => {
-            // TODO
-        })());
+        wait(() => executeWorkflows(sentry).catch(err => sentry.captureException(err)));
 
-        // Return the jobs we're going to run
-        return jsonResponse(toTrigger);
+        // Return all jobs
+        return jsonResponse(data);
     }
 
     // Not found
