@@ -1,0 +1,16 @@
+{
+  "name": "workflow-cron",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development wrangler dev"
+  },
+  "keywords": [],
+  "author": "Matt (IPv4) Cowley",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "workers-sentry": "0.0.3"
+  }
+}
