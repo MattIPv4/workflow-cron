@@ -5,12 +5,13 @@ workflows:
     workflow: update.yml
     ref: master
     cron:
-      - '* * * * *'
+      - '*/15 17,18 * * *'
+      - '0 */2 * * *'
 
-  - name: Testing
+  - name: Service Monitoring
     owner: MattIPv4
-    repo: testing
-    workflow: bad.yml
+    repo: monitors
+    workflow: monitors.yml
     ref: master
     cron:
-      - '* * * * *'
+      - '*/15 * * * *'

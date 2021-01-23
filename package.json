@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development wrangler dev"
+    "dev": "NODE_ENV=development wrangler dev",
+    "publish:production": "NODE_ENV=production wrangler publish -e production"
   },
   "keywords": [],
   "author": "Matt (IPv4) Cowley",
@@ -12,7 +13,7 @@
   "dependencies": {
     "@octokit/core": "^3.2.4",
     "cron-parser": "^3.1.0",
-    "workers-sentry": "0.0.3"
+    "workers-sentry": "0.0.5"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",

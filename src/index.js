@@ -78,7 +78,7 @@ const handleRequest = async ({ request, wait, sentry }) => {
     // Execute triggers route
     if (url.pathname === '/execute') {
         // Trigger each workflow in the background after
-        wait(() => executeWorkflows(sentry).catch(err => sentry.captureException(err)));
+        wait(executeWorkflows(sentry).catch(err => sentry.captureException(err)));
 
         // Return all jobs
         return jsonResponse(data);
@@ -104,3 +104,18 @@ addEventListener('fetch', event => {
     }
 });
 
+// Also listen for a cron trigger
+addEventListener('scheduled', event => {
+    // Start Sentry
+    const sentry = new WorkersSentry(event, process.env.SENTRY_DSN);
+
+    // Process the event
+    try {
+        return event.waitUntil(executeWorkflows(sentry));
+    } catch (err) {
+        // Log & re-throw any errors
+        console.error(err);
+        sentry.captureException(err);
+        throw err;
+    }
+});
