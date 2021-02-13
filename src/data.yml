@@ -1,12 +1,12 @@
 workflows:
-  - name: PogChamp Check
-    owner: MattIPv4
-    repo: pogchamp
-    workflow: update.yml
-    ref: master
-    cron:
-      - '*/15 17,18 * * *'
-      - '0 */2 * * *'
+#  - name: PogChamp Check
+#    owner: MattIPv4
+#    repo: pogchamp
+#    workflow: update.yml
+#    ref: master
+#    cron:
+#      - '*/15 17,18 * * *'
+#      - '0 */2 * * *'
 
   - name: Service Monitoring
     owner: MattIPv4
