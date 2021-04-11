@@ -94,14 +94,16 @@ addEventListener('fetch', event => {
     const sentry = new WorkersSentry(event, process.env.SENTRY_DSN);
 
     // Process the event
-    try {
-        return event.respondWith(handleRequest({ request: event.request, wait: event.waitUntil.bind(event), sentry }));
-    } catch (err) {
+    return event.respondWith(handleRequest({
+        request: event.request,
+        wait: event.waitUntil.bind(event),
+        sentry,
+    }).catch(err => {
         // Log & re-throw any errors
         console.error(err);
         sentry.captureException(err);
         throw err;
-    }
+    }));
 });
 
 // Also listen for a cron trigger
@@ -110,12 +112,10 @@ addEventListener('scheduled', event => {
     const sentry = new WorkersSentry(event, process.env.SENTRY_DSN);
 
     // Process the event
-    try {
-        return event.waitUntil(executeWorkflows(sentry));
-    } catch (err) {
+    return event.waitUntil(executeWorkflows(sentry).catch(err => {
         // Log & re-throw any errors
         console.error(err);
         sentry.captureException(err);
         throw err;
-    }
+    }));
 });
